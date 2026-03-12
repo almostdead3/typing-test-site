@@ -1,82 +1,77 @@
-const textDisplay = document.getElementById('text-display');
-const inputArea = document.getElementById('input-area');
-const wpmLabel = document.getElementById('wpm');
-const accLabel = document.getElementById('acc');
-const resetBtn = document.getElementById('reset-btn');
 
-const wordBank = [
-    "Education is not the learning of facts, but the training of the mind to think.",
-    "The beautiful thing about learning is that nobody can take it away from you.",
-    "The secret of getting ahead is getting started.",
-    "Practice makes perfect. Keep typing to improve your speed."
-];
+let text = "";
+let timeLeft = 0;
+let timer = null;
 
-let startTime = null;
-let currentQuote = "";
+const beginner = "ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz";
+const moderate = "The quick brown fox jumps over the lazy dog. Practice typing regularly to improve speed and accuracy.";
+const topper = "Advanced typists maintain rhythm, precision, and speed while typing complex sentences with punctuation, numbers like 12345, and mixed cases efficiently.";
 
-function startNewTest() {
-    inputArea.value = "";
-    inputArea.focus();
-    startTime = null;
-    wpmLabel.innerText = "0";
-    accLabel.innerText = "100";
-    
-    currentQuote = wordBank[Math.floor(Math.random() * wordBank.length)];
-    renderText("");
+function startTest(){
+
+const difficulty = document.getElementById("difficulty").value;
+timeLeft = parseInt(document.getElementById("timer").value);
+
+document.getElementById("time").innerText = timeLeft;
+
+if(difficulty === "beginner"){
+text = beginner;
 }
 
-function renderText(inputValue) {
-    textDisplay.innerHTML = '';
-    const quoteChars = currentQuote.split('');
-    const inputChars = inputValue.split('');
-    let errors = 0;
-
-    quoteChars.forEach((char, i) => {
-        const span = document.createElement('span');
-        if (inputChars[i] == null) {
-            span.className = '';
-        } else if (inputChars[i] === char) {
-            span.className = 'char-correct';
-        } else {
-            span.className = 'char-error';
-            errors++;
-        }
-        span.innerText = char;
-        textDisplay.appendChild(span);
-    });
-    return errors;
+if(difficulty === "moderate"){
+text = moderate;
 }
 
-inputArea.addEventListener('input', () => {
-    if (!startTime && inputArea.value.length > 0) {
-        startTime = new Date();
-    }
+if(difficulty === "topper"){
+text = topper;
+}
 
-    const userInput = inputArea.value;
-    const errorCount = renderText(userInput);
+document.getElementById("textDisplay").innerText = text;
 
-    // Calculate Stats
-    if (startTime) {
-        const minutes = (new Date() - startTime) / 60000;
-        const wpm = Math.round((userInput.length / 5) / minutes);
-        wpmLabel.innerText = wpm > 0 ? wpm : 0;
+document.getElementById("inputBox").value = "";
+document.getElementById("inputBox").disabled = false;
+document.getElementById("inputBox").focus();
 
-        const accuracy = Math.round(((userInput.length - errorCount) / userInput.length) * 100);
-        accLabel.innerText = accuracy >= 0 ? accuracy : 100;
-    }
+clearInterval(timer);
 
-    // Finish Condition
-    if (userInput.length >= currentQuote.length) {
-        inputArea.disabled = true;
-        setTimeout(() => {
-            alert(`Test Complete! WPM: ${wpmLabel.innerText}`);
-            inputArea.disabled = false;
-            startNewTest();
-        }, 500);
-    }
-});
+timer = setInterval(function(){
 
-resetBtn.addEventListener('click', startNewTest);
+timeLeft--;
+document.getElementById("time").innerText = timeLeft;
 
-// Initialize on load
-window.onload = startNewTest;
+if(timeLeft <= 0){
+finishTest();
+}
+
+},1000);
+
+}
+
+function finishTest(){
+
+clearInterval(timer);
+
+const typed = document.getElementById("inputBox").value;
+
+let correct = 0;
+
+for(let i=0;i<typed.length;i++){
+
+if(typed[i] === text[i]){
+correct++;
+}
+
+}
+
+let accuracy = (correct / typed.length) * 100;
+
+let words = typed.length / 5;
+
+let wpm = words;
+
+document.getElementById("wpm").innerText = Math.round(wpm);
+document.getElementById("accuracy").innerText = Math.round(accuracy);
+
+document.getElementById("inputBox").disabled = true;
+
+}
