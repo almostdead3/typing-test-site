@@ -1,139 +1,47 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline';">
-    <title>SafeType | Student Edition</title>
-    <style>
-        :root {
-            --bg: #f8f9fa;
-            --text: #2d3436;
-            --accent: #00b894;
-            --error: #ff7675;
-            --muted: #b2bec3;
-        }
-        body {
-            font-family: 'Courier New', Courier, monospace; /* Monospaced is best for typing */
-            background: var(--bg);
-            color: var(--text);
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            cursor: pointer; /* Shows user they can click anywhere */
-        }
-        #container {
-            max-width: 800px;
-            padding: 20px;
-            text-align: left;
-        }
-        #text-display {
-            font-size: 1.8rem;
-            line-height: 1.5;
-            word-spacing: 5px;
-            color: var(--muted);
-            position: relative;
-        }
-        .correct { color: var(--text); }
-        .incorrect { color: var(--error); background: rgba(255, 118, 117, 0.2); }
-        .current { border-bottom: 3px solid var(--accent); }
-        
-        #stats {
-            margin-top: 50px;
-            font-family: sans-serif;
-            font-size: 1rem;
-            color: var(--muted);
-        }
-        /* Hidden input that actually works */
-        #hidden-input {
-            position: absolute;
-            opacity: 0;
-            pointer-events: none;
-        }
-    </style>
+<meta charset="UTF-8">
+<title>Safe Typing Test</title>
+<link rel="stylesheet" href="style.css">
 </head>
-<body onclick="focusInput()">
 
-    <div id="container">
-        <input type="text" id="hidden-input" autofocus>
-        <div id="text-display">Loading safe text...</div>
-        
-        <div id="stats">
-            WPM: <span id="wpm">0</span> | Accuracy: <span id="acc">100</span>%
-            <br><br>
-            <small>(Click anywhere and just start typing)</small>
-        </div>
-    </div>
+<body>
 
-<script>
-    const textDisplay = document.getElementById('text-display');
-    const inputField = document.getElementById('hidden-input');
-    const wpmDisplay = document.getElementById('wpm');
-    const accDisplay = document.getElementById('acc');
+<h1>Typing Test</h1>
 
-    const quote = "Education is the most powerful weapon which you can use to change the world.";
-    let startTime = null;
-    let errors = 0;
+<div class="settings">
 
-    // 1. Setup the text
-    function init() {
-        textDisplay.innerHTML = quote.split('').map(char => `<span>${char}</span>`).join('');
-        inputField.value = '';
-    }
+<label>Difficulty</label>
+<select id="difficulty">
+<option value="beginner">Beginner</option>
+<option value="moderate">Moderate</option>
+<option value="topper">Topper</option>
+</select>
 
-    // 2. Focus the input so typing works
-    function focusInput() {
-        inputField.focus();
-    }
+<label>Timer</label>
+<select id="timer">
+<option value="15">15 sec</option>
+<option value="30">30 sec</option>
+<option value="60">60 sec</option>
+<option value="120">120 sec</option>
+</select>
 
-    // 3. Logic for typing
-    inputField.addEventListener('input', () => {
-        if (!startTime) startTime = new Date();
+<button onclick="startTest()">Start Test</button>
 
-        const arrayQuote = textDisplay.querySelectorAll('span');
-        const arrayValue = inputField.value.split('');
-        
-        errors = 0;
+</div>
 
-        arrayQuote.forEach((characterSpan, index) => {
-            const character = arrayValue[index];
-            
-            if (character == null) {
-                characterSpan.className = ''; // Not typed yet
-            } else if (character === characterSpan.innerText) {
-                characterSpan.className = 'correct';
-            } else {
-                characterSpan.className = 'incorrect';
-                errors++;
-            }
+<div id="textDisplay"></div>
 
-            // Add cursor underline to current letter
-            if (index === arrayValue.length) {
-                characterSpan.classList.add('current');
-            }
-        });
+<textarea id="inputBox" placeholder="Start typing here..." disabled></textarea>
 
-        // Calculate WPM
-        const timeInMinutes = (new Date() - startTime) / 60000;
-        const wpm = Math.round((arrayValue.length / 5) / timeInMinutes);
-        if (wpm > 0 && isFinite(wpm)) wpmDisplay.innerText = wpm;
+<div class="result">
+<p>Time Left: <span id="time">0</span></p>
+<p>WPM: <span id="wpm">0</span></p>
+<p>Accuracy: <span id="accuracy">0</span>%</p>
+</div>
 
-        // Calculate Accuracy
-        const acc = Math.round(((arrayValue.length - errors) / arrayValue.length) * 100);
-        if (acc >= 0) accDisplay.innerText = acc;
+<script src="script.js"></script>
 
-        // Reset if finished
-        if (arrayValue.length >= quote.length) {
-            alert(`Great job! Final WPM: ${wpm}`);
-            location.reload();
-        }
-    });
-
-    init();
-    focusInput();
-</script>
 </body>
 </html>
