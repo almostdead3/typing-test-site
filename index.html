@@ -7,105 +7,133 @@
     <title>SafeType | Student Edition</title>
     <style>
         :root {
-            --bg: #ffffff;
+            --bg: #f8f9fa;
             --text: #2d3436;
-            --accent: #0984e3;
-            --error: #d63031;
+            --accent: #00b894;
+            --error: #ff7675;
+            --muted: #b2bec3;
         }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-family: 'Courier New', Courier, monospace; /* Monospaced is best for typing */
             background: var(--bg);
             color: var(--text);
+            margin: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             height: 100vh;
-            margin: 0;
+            cursor: pointer; /* Shows user they can click anywhere */
         }
-        #box {
+        #container {
             max-width: 800px;
-            padding: 2rem;
-            text-align: center;
+            padding: 20px;
+            text-align: left;
         }
         #text-display {
-            font-size: 1.5rem;
-            line-height: 1.6;
-            margin-bottom: 1rem;
-            user-select: none;
-            letter-spacing: 1px;
+            font-size: 1.8rem;
+            line-height: 1.5;
+            word-spacing: 5px;
+            color: var(--muted);
+            position: relative;
         }
-        .correct { color: var(--accent); }
-        .incorrect { color: var(--error); text-decoration: underline; }
-        #input-field {
-            opacity: 0;
+        .correct { color: var(--text); }
+        .incorrect { color: var(--error); background: rgba(255, 118, 117, 0.2); }
+        .current { border-bottom: 3px solid var(--accent); }
+        
+        #stats {
+            margin-top: 50px;
+            font-family: sans-serif;
+            font-size: 1rem;
+            color: var(--muted);
+        }
+        /* Hidden input that actually works */
+        #hidden-input {
             position: absolute;
-            z-index: -1;
+            opacity: 0;
+            pointer-events: none;
         }
-        .stats { font-weight: bold; margin-top: 2rem; opacity: 0.7; }
     </style>
 </head>
-<body>
+<body onclick="focusInput()">
 
-<div id="box">
-    <div id="text-display">Click here and start typing to begin the test...</div>
-    <input type="text" id="input-field" autocomplete="off" autofocus>
-    
-    <div class="stats">
-        WPM: <span id="wpm">0</span> | Accuracy: <span id="acc">100</span>%
+    <div id="container">
+        <input type="text" id="hidden-input" autofocus>
+        <div id="text-display">Loading safe text...</div>
+        
+        <div id="stats">
+            WPM: <span id="wpm">0</span> | Accuracy: <span id="acc">100</span>%
+            <br><br>
+            <small>(Click anywhere and just start typing)</small>
+        </div>
     </div>
-</div>
 
 <script>
     const textDisplay = document.getElementById('text-display');
-    const inputField = document.getElementById('input-field');
+    const inputField = document.getElementById('hidden-input');
     const wpmDisplay = document.getElementById('wpm');
-    
-    const sampleText = "The quick brown fox jumps over the lazy dog. Programming is a skill that requires patience and practice.";
-    let startTime;
-    let charactersTyped = 0;
+    const accDisplay = document.getElementById('acc');
 
-    // Initialize
-    textDisplay.textContent = sampleText;
+    const quote = "Education is the most powerful weapon which you can use to change the world.";
+    let startTime = null;
+    let errors = 0;
 
-    window.addEventListener('click', () => inputField.focus());
-
-    inputField.addEventListener('input', (e) => {
-        if (!startTime) startTime = new Date();
-        
-        const val = e.target.value;
-        const arrayQuote = textDisplay.querySelectorAll('span');
-        const arrayValue = val.split('');
-
-        // Logic to render characters safely
-        renderText(val);
-
-        // Simple WPM Calculation
-        const timeElapsed = (new Date() - startTime) / 60000; // in minutes
-        const wpm = Math.round((val.length / 5) / timeElapsed);
-        if (wpm > 0 && isFinite(wpm)) wpmDisplay.textContent = wpm;
-    });
-
-    function renderText(inputValue) {
-        textDisplay.innerHTML = '';
-        sampleText.split('').forEach((char, index) => {
-            const span = document.createElement('span');
-            if (inputValue[index] == null) {
-                span.textContent = char;
-            } else if (inputValue[index] === char) {
-                span.textContent = char;
-                span.className = 'correct';
-            } else {
-                span.textContent = char;
-                span.className = 'incorrect';
-            }
-            textDisplay.appendChild(span);
-        });
+    // 1. Setup the text
+    function init() {
+        textDisplay.innerHTML = quote.split('').map(char => `<span>${char}</span>`).join('');
+        inputField.value = '';
     }
 
-    // Safety: Prevent right-click to stop inspection/distraction for students
-    window.oncontextmenu = (e) => e.preventDefault();
-</script>
+    // 2. Focus the input so typing works
+    function focusInput() {
+        inputField.focus();
+    }
 
+    // 3. Logic for typing
+    inputField.addEventListener('input', () => {
+        if (!startTime) startTime = new Date();
+
+        const arrayQuote = textDisplay.querySelectorAll('span');
+        const arrayValue = inputField.value.split('');
+        
+        errors = 0;
+
+        arrayQuote.forEach((characterSpan, index) => {
+            const character = arrayValue[index];
+            
+            if (character == null) {
+                characterSpan.className = ''; // Not typed yet
+            } else if (character === characterSpan.innerText) {
+                characterSpan.className = 'correct';
+            } else {
+                characterSpan.className = 'incorrect';
+                errors++;
+            }
+
+            // Add cursor underline to current letter
+            if (index === arrayValue.length) {
+                characterSpan.classList.add('current');
+            }
+        });
+
+        // Calculate WPM
+        const timeInMinutes = (new Date() - startTime) / 60000;
+        const wpm = Math.round((arrayValue.length / 5) / timeInMinutes);
+        if (wpm > 0 && isFinite(wpm)) wpmDisplay.innerText = wpm;
+
+        // Calculate Accuracy
+        const acc = Math.round(((arrayValue.length - errors) / arrayValue.length) * 100);
+        if (acc >= 0) accDisplay.innerText = acc;
+
+        // Reset if finished
+        if (arrayValue.length >= quote.length) {
+            alert(`Great job! Final WPM: ${wpm}`);
+            location.reload();
+        }
+    });
+
+    init();
+    focusInput();
+</script>
 </body>
 </html>
