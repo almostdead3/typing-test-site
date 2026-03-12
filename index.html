@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline';">
+    <title>SafeType | Student Edition</title>
+    <style>
+        :root {
+            --bg: #ffffff;
+            --text: #2d3436;
+            --accent: #0984e3;
+            --error: #d63031;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        #box {
+            max-width: 800px;
+            padding: 2rem;
+            text-align: center;
+        }
+        #text-display {
+            font-size: 1.5rem;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+            user-select: none;
+            letter-spacing: 1px;
+        }
+        .correct { color: var(--accent); }
+        .incorrect { color: var(--error); text-decoration: underline; }
+        #input-field {
+            opacity: 0;
+            position: absolute;
+            z-index: -1;
+        }
+        .stats { font-weight: bold; margin-top: 2rem; opacity: 0.7; }
+    </style>
+</head>
+<body>
+
+<div id="box">
+    <div id="text-display">Click here and start typing to begin the test...</div>
+    <input type="text" id="input-field" autocomplete="off" autofocus>
+    
+    <div class="stats">
+        WPM: <span id="wpm">0</span> | Accuracy: <span id="acc">100</span>%
+    </div>
+</div>
+
+<script>
+    const textDisplay = document.getElementById('text-display');
+    const inputField = document.getElementById('input-field');
+    const wpmDisplay = document.getElementById('wpm');
+    
+    const sampleText = "The quick brown fox jumps over the lazy dog. Programming is a skill that requires patience and practice.";
+    let startTime;
+    let charactersTyped = 0;
+
+    // Initialize
+    textDisplay.textContent = sampleText;
+
+    window.addEventListener('click', () => inputField.focus());
+
+    inputField.addEventListener('input', (e) => {
+        if (!startTime) startTime = new Date();
+        
+        const val = e.target.value;
+        const arrayQuote = textDisplay.querySelectorAll('span');
+        const arrayValue = val.split('');
+
+        // Logic to render characters safely
+        renderText(val);
+
+        // Simple WPM Calculation
+        const timeElapsed = (new Date() - startTime) / 60000; // in minutes
+        const wpm = Math.round((val.length / 5) / timeElapsed);
+        if (wpm > 0 && isFinite(wpm)) wpmDisplay.textContent = wpm;
+    });
+
+    function renderText(inputValue) {
+        textDisplay.innerHTML = '';
+        sampleText.split('').forEach((char, index) => {
+            const span = document.createElement('span');
+            if (inputValue[index] == null) {
+                span.textContent = char;
+            } else if (inputValue[index] === char) {
+                span.textContent = char;
+                span.className = 'correct';
+            } else {
+                span.textContent = char;
+                span.className = 'incorrect';
+            }
+            textDisplay.appendChild(span);
+        });
+    }
+
+    // Safety: Prevent right-click to stop inspection/distraction for students
+    window.oncontextmenu = (e) => e.preventDefault();
+</script>
+
+</body>
+</html>
